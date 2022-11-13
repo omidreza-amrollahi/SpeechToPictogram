@@ -4,11 +4,13 @@ import streamlit as st
 from pydub import AudioSegment
 from model.clean_text import clean_text
 from model.POS_tagging import POS_tagging
-from model.save_pictogram import save_pictogram
 import matplotlib.pyplot as plt
 import requests
 from PIL import Image
 from io import BytesIO
+import openai
+openai.organization = "org-0etUm2oDAR2gC5nDs0EMyMWe"
+openai.api_key = "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"
 
 st.set_page_config(
     page_title="Whisper based ASR",
@@ -91,7 +93,29 @@ def generate_pictogram(text_list):
                 img = Image.open(BytesIO(pic_response.content))
                 st.image(img, use_column_width='auto', caption=text_list[i])
             else:
-                st.write(f"no image found for /{text_list[i]}/")
+                st.write(f"Using DALLE2 for /{text_list[i]}/")
+                try:
+                    response = openai.Image.create(
+                      prompt=text_list[i],
+                      n=2,
+                      size="512x512"
+                    )
+                    image_url = response['data'][0]['url']
+                    image_response = requests.get(image_url)
+                    img = Image.open(BytesIO(image_response.content))
+                    st.image(img, use_column_width='auto', caption=text_list[i])
+                except:
+                    st.write("Could not fetch images from the API")
+                # using SD for the purpose --> i do not like it
+                # SD_API_url = f"https://api.newnative.ai/stable-diffusion?prompt={text_list[i]}"
+                # SDresponse = requests.request("GET", SD_API_url)
+                # SDdata = SDresponse.json()
+                # SD_image_url = SDdata["image_url"]
+                # SDpic_response = requests.get(SD_image_url)
+                # img = Image.open(BytesIO(SDpic_response.content))
+                # st.image(img, use_column_width='auto', caption=text_list[i])
+
+
 
 st.title("Speech to Pictogram")
 st.info('Supports all popular audio formats - WAV, MP3, MP4, OGG, WMA, AAC, FLAC, FLV')
@@ -144,10 +168,9 @@ if uploaded_file is not None:
             cleaned_text, concatString = clean_text(transcript)
             prediction = POS_tagging(concatString).make_predictions()
             generate_pictogram(prediction)
-
 else:
     st.warning('Please upload your audio file')
 
-st.markdown("<br><hr><center>Made by <a href='mailto:omidreza.ir@gmail.com?subject=Speech to pictogram WebApp!&body=Please specify the issue you are facing with the app.'><strong>Omidreza</strong></a> </center><hr>", unsafe_allow_html=True)
+st.markdown("<br><hr><center>Made by <a href='mailto:omidreza.ir@gmail.com?subject=Speech to pictogram WebApp!&body=Please specify the issue you are facing with the app.'><strong>Omidreza</strong></a> source code:<a href='https://github.com/omidreza-amrollahi'><strong>Github</strong></a></center><hr>", unsafe_allow_html=True)
 
 
