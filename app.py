@@ -23,8 +23,7 @@ upload_path = "uploads/"
 download_path = "downloads/"
 transcript_path = "transcripts/"
 
-# @st.cache(persist=True,allow_output_mutation=False,show_spinner=True,suppress_st_warning=True)
-# @st.cache()
+@st.cache()
 def to_mp3(audio_file, output_audio_file, upload_path, download_path):
     ## Converting Different Audio Formats To MP3 ##
     if audio_file.name.split('.')[-1].lower()=="wav":
@@ -60,13 +59,13 @@ def to_mp3(audio_file, output_audio_file, upload_path, download_path):
         audio_data.export(os.path.join(download_path,output_audio_file), format="mp3", tags=audio_tags)
     return output_audio_file
 
-# @st.cache()
+@st.cache()
 def process_audio(filename, model_type):
     model = whisper.load_model(model_type)
     result = model.transcribe(filename, fp16=False)
     return result["text"]
 
-# @st.cache()
+@st.cache()
 def save_transcript(transcript_data, txt_file):
     with open(os.path.join(transcript_path, txt_file),"w") as f:
         f.write(transcript_data)
